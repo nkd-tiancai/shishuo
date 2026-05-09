@@ -56,18 +56,16 @@ web/
 
 ## 快速启动
 
+**Windows 用户**：双击 `web/初始化.bat` 一键安装，然后双击 `web/启动.bat` 启动服务。
+
+**命令行**：
 ```bash
 cd web
+cp .env.example .env.local   # 编辑填入 CONTENT_ROOT 和 API Keys
 npm install
-
-# 配置环境变量 .env.local
-# DEEPSEEK_API_KEY=...
-# MINIMAX_API_KEY=...
-# DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
-# MINIMAX_BASE_URL=https://api.minimax.chat/v1
-
-npx next dev --port 3000
+npm run dev
 ```
+打开 http://localhost:3000
 
 > **注意**：本项目不包含教材内容和角色数据。你需要自行准备 markdown 教材文件并配置 `知识库索引` 和 `图谱数据`。
 
