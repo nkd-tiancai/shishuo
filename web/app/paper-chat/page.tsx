@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Avatar from "../components/Avatar";
-import Markdown from "../components/Markdown";
+import ChatMessage from "@/components/ChatMessage";
+import ChatInput from "@/components/ChatInput";
 import type { ChatMessage as Message } from "@/lib/types";
 
 export default function PaperChatPage() {
@@ -66,11 +66,6 @@ export default function PaperChatPage() {
     }
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-    // Shift+Enter for newline
-  }
-
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       <header style={{
@@ -99,38 +94,19 @@ export default function PaperChatPage() {
             <p style={{ fontSize: "0.8rem" }}>马超和九雀会从数学和 ML 两个视角，用追问带你拆解这篇论文</p>
           </div>
         )}
-        {messages.map((msg, i) => {
-          if (msg.role === "system") return <div key={i} style={{ textAlign: "center", color: "#dc2626", fontSize: "0.8rem" }}>{msg.content}</div>;
-          const isUser = msg.role === "user";
-          return (
-            <div key={i} className="animate-in" style={{ display: "flex", gap: "0.6rem", alignItems: "flex-start", flexDirection: isUser ? "row-reverse" : "row" }}>
-              <Avatar name={msg.role} />
-              <div style={{ maxWidth: 580 }}>
-                <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginBottom: 2, fontWeight: 600 }}>{isUser ? "我" : msg.role}</div>
-                <div className={`msg-bubble ${isUser ? "self" : "other"}`}>
-                  <Markdown>{msg.content}</Markdown>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {messages.map((msg, i) => (
+          <ChatMessage key={i} role={msg.role} content={msg.content} index={i} useMarkdown />
+        ))}
         {loading && (
           <div className="animate-in" style={{ display: "flex", gap: "0.6rem", alignItems: "flex-start" }}>
-            <Avatar name="马超" />
-            <div><div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginBottom: 2, fontWeight: 600 }}>思考中</div>
-              <div className="msg-bubble other" style={{ padding: "0.5rem 0.85rem" }}><div className="typing-dots"><span /><span /><span /></div></div>
-            </div>
+            <div><div className="msg-bubble other" style={{ padding: "0.5rem 0.85rem" }}><div className="typing-dots"><span /><span /><span /></div></div></div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      <div style={{ padding: "0.75rem 1.25rem", borderTop: "1px solid var(--border-color)", background: "var(--bg-header)", display: "flex", gap: "0.5rem" }}>
-        <textarea className="chat-input" value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown}
-          placeholder="问论文相关的问题..." disabled={loading || !paperSlug} rows={1}
-          style={{ resize: "none", minHeight: 38, maxHeight: 120 }} />
-        <button className="btn-primary" onClick={sendMessage} disabled={loading || !input.trim()}>发送</button>
-      </div>
+      <ChatInput value={input} onChange={setInput} onSend={sendMessage}
+        disabled={loading || !paperSlug} placeholder="问论文相关的问题..." />
     </div>
   );
 }

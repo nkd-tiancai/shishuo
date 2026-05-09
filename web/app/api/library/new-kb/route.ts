@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
-
-const INDEX_PATH = "d:\\claude code\\web\\data\\knowledge-index.json";
+import { PATHS } from "@/lib/env";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +18,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const existing = JSON.parse(await fs.readFile(INDEX_PATH, "utf-8"));
+    const existing = JSON.parse(await fs.readFile(PATHS.knowledgeIndex, "utf-8"));
     const kbs = existing.knowledgeBases || {};
 
     if (kbs[key]) {
@@ -37,7 +36,7 @@ export async function POST(request: NextRequest) {
     };
 
     existing.knowledgeBases = kbs;
-    await fs.writeFile(INDEX_PATH, JSON.stringify(existing, null, 2), "utf-8");
+    await fs.writeFile(PATHS.knowledgeIndex, JSON.stringify(existing, null, 2), "utf-8");
 
     return NextResponse.json({
       ok: true,

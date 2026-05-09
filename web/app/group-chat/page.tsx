@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import type { ChatMessage } from "@/lib/types";
-import Avatar from "../components/Avatar";
+import type { ChatMessage as ChatMsgType } from "@/lib/types";
+import ChatMessage from "@/components/ChatMessage";
+import ChatInput from "@/components/ChatInput";
 
 export default function GroupChatPage() {
   const storageKey = "socratopia-groupchat-messages";
-  const [allMessages, setAllMessages] = useState<Record<string, ChatMessage[]>>(() => {
+  const [allMessages, setAllMessages] = useState<Record<string, ChatMsgType[]>>(() => {
     if (typeof window === "undefined") return {};
     try { return JSON.parse(localStorage.getItem(storageKey) || "{}"); } catch { return {}; }
   });
@@ -20,7 +21,7 @@ export default function GroupChatPage() {
   activeChatRef.current = activeChat;
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  function setMessages(next: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) {
+  function setMessages(next: ChatMsgType[] | ((prev: ChatMsgType[]) => ChatMsgType[])) {
     setAllMessages((all) => {
       const current = all[activeChat] || [];
       const updated = { ...all, [activeChat]: typeof next === "function" ? next(current) : next };
@@ -50,7 +51,7 @@ export default function GroupChatPage() {
     if (!input.trim()) return;
     setLoading(true);
 
-    const userMsg: ChatMessage = {
+    const userMsg: ChatMsgType = {
       role: "user",
       content: input,
       timestamp: Date.now(),
@@ -111,14 +112,6 @@ export default function GroupChatPage() {
     } finally {
       setLoading(false);
     }
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendGroupMessage();
-    }
-    // Shift+Enter: natural newline, default behavior
   }
 
   const chatLabels: Record<string, string> = {
@@ -216,64 +209,15 @@ export default function GroupChatPage() {
             </div>
           )}
 
-          {messages.map((msg, i) => {
-            const isUser = msg.role === "user";
-            const isSystem = msg.role === "system";
-
-            if (isSystem) {
-              return <div key={i} style={{ textAlign: "center", color: "#dc2626", fontSize: "0.72rem" }}>{msg.content}</div>;
-            }
-
-            return (
-              <div
-                key={i}
-                className="animate-in"
-                style={{
-                  display: "flex",
-                  gap: "0.4rem",
-                  alignItems: "flex-start",
-                  flexDirection: isUser ? "row-reverse" : "row",
-                }}
-              >
-                <Avatar name={msg.role} size="sm" />
-                <div style={{ maxWidth: 360 }}>
-                  <div
-                    style={{
-                      fontSize: "0.65rem",
-                      color: isUser ? "var(--text-secondary)" : "var(--text-secondary)",
-                      marginBottom: 1,
-                      fontWeight: 600,
-                    }}
-                  >
-                    {isUser ? "我" : msg.role}
-                  </div>
-                  <div
-                    className="msg-bubble"
-                    style={{
-                      background: isUser ? "var(--bg-self-msg)" : "var(--bg-card)",
-                      borderRadius: isUser ? "6px 0 6px 6px" : "0 6px 6px 6px",
-                      padding: "0.4rem 0.65rem",
-                      fontSize: "0.8rem",
-                    }}
-                  >
-                    {msg.content}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {messages.map((msg, i) => (
+            <ChatMessage key={i} role={msg.role} content={msg.content} index={i} compact />
+          ))}
 
           {loading && (
             <div className="animate-in" style={{ display: "flex", gap: "0.4rem", alignItems: "flex-start" }}>
-              <Avatar name={activeChat === "private-laoshi" ? "牢施" : activeChat === "private-xiaohua" ? "小华" : "牢施"} size="sm" />
               <div>
-                <div style={{ fontSize: "0.65rem", color: "var(--text-secondary)", marginBottom: 1, fontWeight: 600 }}>
-                  对方正在输入...
-                </div>
                 <div className="msg-bubble other" style={{ padding: "0.35rem 0.65rem" }}>
-                  <div className="typing-dots">
-                    <span /><span /><span />
-                  </div>
+                  <div className="typing-dots"><span /><span /><span /></div>
                 </div>
               </div>
             </div>
@@ -282,36 +226,8 @@ export default function GroupChatPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input */}
-        <div
-          style={{
-            padding: "0.6rem 1rem",
-            borderTop: "1px solid var(--border-color)",
-            background: "var(--bg-header)",
-            display: "flex",
-            gap: "0.4rem",
-            flexShrink: 0,
-          }}
-        >
-          <textarea
-            className="chat-input"
-            style={{ padding: "0.5rem 0.7rem", fontSize: "0.8rem", resize: "none", minHeight: 36, maxHeight: 120 }}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={activeChat.startsWith("private") ? "私密消息..." : "输入消息..."}
-            disabled={loading}
-            rows={1}
-          />
-          <button
-            className="btn-primary"
-            style={{ padding: "0.5rem 0.9rem", fontSize: "0.8rem" }}
-            onClick={sendGroupMessage}
-            disabled={loading || !input.trim()}
-          >
-            发送
-          </button>
-        </div>
+        <ChatInput value={input} onChange={setInput} onSend={sendGroupMessage}
+          disabled={loading} placeholder={activeChat.startsWith("private") ? "私密消息..." : "输入消息..."} />
       </div>
     </div>
   );

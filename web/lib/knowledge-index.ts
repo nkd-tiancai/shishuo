@@ -2,6 +2,7 @@ import knowledgeData from "@/data/knowledge-index.json";
 import type { KnowledgeGraph } from "./graph-types";
 import { KnowledgeEntry } from "./types";
 import fs from "fs";
+import { PATHS } from "./env";
 
 export interface PaperEntry {
   slug: string;
@@ -47,9 +48,9 @@ function getGraph(): KnowledgeGraph | null {
   const now = Date.now();
   if (_cachedGraph && now - _cacheTime < CACHE_TTL_MS) return _cachedGraph;
   try {
-    const path = "d:/claude code/web/data/graph.json";
-    if (fs.existsSync(path)) {
-      _cachedGraph = JSON.parse(fs.readFileSync(path, "utf-8")) as KnowledgeGraph;
+    const gPath = PATHS.graphJson;
+    if (gPath && fs.existsSync(gPath)) {
+      _cachedGraph = JSON.parse(fs.readFileSync(gPath, "utf-8")) as KnowledgeGraph;
       _cacheTime = now;
     }
   } catch {}

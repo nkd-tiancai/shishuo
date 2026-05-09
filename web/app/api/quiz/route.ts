@@ -4,8 +4,7 @@ import { readTextbookChapter } from "@/lib/file-reader";
 import knowledgeData from "@/data/knowledge-index.json";
 import fs from "fs/promises";
 import path from "path";
-
-const TUTORING_DIR = "d:\\claude code\\辅导\\teacher";
+import { pathOrThrow } from "@/lib/env";
 
 function findConceptAnyKB(slug: string) {
   const kbs = knowledgeData.knowledgeBases as Record<string, { concepts: Record<string, unknown> }>;
@@ -78,7 +77,7 @@ ${userAnswers}
       try {
         const dateStr = new Date().toISOString().slice(0, 10);
         const timeStr = new Date().toLocaleString("zh-CN", { hour12: false });
-        const quizDir = path.join(TUTORING_DIR, "quiz");
+        const quizDir = path.join(pathOrThrow("teacherDir"), "quiz");
         await fs.mkdir(quizDir, { recursive: true });
         const entry = `# 自测 — ${concept.title || conceptSlug}
 日期: ${dateStr} ${timeStr}

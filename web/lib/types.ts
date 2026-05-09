@@ -59,5 +59,3 @@ export const CHARACTERS: Character[] = [
     subject: [],
   },
 ];
-
-export const TUTORING_DIR = "d:\\claude code\\辅导";

@@ -1,14 +1,14 @@
 import fs from "fs/promises";
 import path from "path";
-import { TUTORING_DIR } from "./types";
+import { pathOrThrow } from "./env";
 
 export async function readMarkdownFile(relativePath: string): Promise<string> {
-  const fullPath = path.join(TUTORING_DIR, relativePath);
+  const fullPath = path.join(pathOrThrow("tutoringRoot"), relativePath);
   return fs.readFile(fullPath, "utf-8");
 }
 
 export async function readAllTeacherFiles(): Promise<Record<string, string>> {
-  const teacherDir = path.join(TUTORING_DIR, "teacher");
+  const teacherDir = path.join(pathOrThrow("tutoringRoot"), "teacher");
   const entries = await fs.readdir(teacherDir);
   const mdFiles = entries.filter((f) => f.endsWith(".md"));
 
@@ -54,7 +54,7 @@ export async function appendToMarkdownFile(
   relativePath: string,
   content: string
 ): Promise<void> {
-  const fullPath = path.join(TUTORING_DIR, relativePath);
+  const fullPath = path.join(pathOrThrow("tutoringRoot"), relativePath);
   await fs.appendFile(fullPath, content, "utf-8");
 }
 
@@ -66,7 +66,7 @@ export async function updateFileSection(
   sectionHeader: string,
   newContent: string
 ): Promise<void> {
-  const fullPath = path.join(TUTORING_DIR, relativePath);
+  const fullPath = path.join(pathOrThrow("tutoringRoot"), relativePath);
   const content = await fs.readFile(fullPath, "utf-8");
   const lines = content.split("\n");
 

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import type { KnowledgeGraph } from "@/lib/graph-types";
+import { PATHS } from "@/lib/env";
 
 function loadGraph(): KnowledgeGraph | null {
-  const graphPath = "d:/claude code/web/data/graph.json";
-  if (!fs.existsSync(graphPath)) return null;
+  const graphPath = PATHS.graphJson;
+  if (!graphPath || !fs.existsSync(graphPath)) return null;
   try {
     return JSON.parse(fs.readFileSync(graphPath, "utf-8")) as KnowledgeGraph;
   } catch {

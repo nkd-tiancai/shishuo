@@ -3,9 +3,10 @@ import fs from "fs";
 import path from "path";
 import { KnowledgeGraph, GraphNode, GraphEdge } from "@/lib/graph-types";
 import { chat } from "@/lib/llm-router";
+import { pathOrThrow, PATHS } from "@/lib/env";
 
-const MARKDOWN_DIR = "d:/claude code/辅导/markdown";
-const OUTPUT_PATH = "d:/claude code/web/data/graph.json";
+const MARKDOWN_DIR = pathOrThrow("markdownDir");
+const OUTPUT_PATH = PATHS.graphJson;
 
 interface ExtractionNode {
   id: string;

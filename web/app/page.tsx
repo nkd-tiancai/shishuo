@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import type { ChatMessage as Message } from "@/lib/types";
-import Avatar from "./components/Avatar";
-import Markdown from "./components/Markdown";
+import ChatMessage from "@/components/ChatMessage";
+import ChatInput from "@/components/ChatInput";
 
 interface ConceptOption {
   slug: string;
@@ -161,10 +161,6 @@ export default function ClassroomPage() {
     }).catch((err) => { console.warn("Backup failed:", err); });
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-  }
-
   const currentConcept = concepts.find((c) => c.slug === conceptSlug);
 
   return (
@@ -211,32 +207,13 @@ export default function ClassroomPage() {
           </div>
         )}
 
-        {messages.map((msg, i) => {
-          const isUser = msg.role === "user";
-          const isSystem = msg.role === "system";
-          if (isSystem) {
-            return <div key={i} style={{ textAlign: "center", color: "#dc2626", fontSize: "0.8rem", padding: "0.5rem" }}>{msg.content}</div>;
-          }
-          return (
-            <div key={i} className="animate-in" style={{ display: "flex", gap: "0.6rem", alignItems: "flex-start", flexDirection: isUser ? "row-reverse" : "row" }}>
-              <Avatar name={msg.role} />
-              <div style={{ maxWidth: 580 }}>
-                <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginBottom: 2, textAlign: isUser ? "right" : "left", fontWeight: 600 }}>
-                  {isUser ? "我" : msg.role}
-                </div>
-                <div className={`msg-bubble ${isUser ? "self" : "other"}`}>
-                  <Markdown>{msg.content}</Markdown>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {messages.map((msg, i) => (
+          <ChatMessage key={i} role={msg.role} content={msg.content} index={i} useMarkdown />
+        ))}
 
         {loading && (
           <div className="animate-in" style={{ display: "flex", gap: "0.6rem", alignItems: "flex-start" }}>
-            <Avatar name="马超" />
             <div>
-              <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginBottom: 2, fontWeight: 600 }}>思考中</div>
               <div className="msg-bubble other" style={{ padding: "0.5rem 0.85rem" }}>
                 <div className="typing-dots"><span /><span /><span /></div>
               </div>
@@ -246,14 +223,11 @@ export default function ClassroomPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div style={{ padding: "0.75rem 1.25rem", borderTop: "1px solid var(--border-color)", background: "var(--bg-header)", display: "flex", gap: "0.5rem", flexShrink: 0 }}>
-        <textarea className="chat-input" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown}
-          placeholder="输入你的回答或问题..." disabled={loading} rows={1}
-          style={{ resize: "none", minHeight: 38, maxHeight: 120 }} />
-        <button className="btn-primary" onClick={() => sendMessage()} disabled={loading || !input.trim()}>发送</button>
+      <ChatInput value={input} onChange={setInput} onSend={() => sendMessage()}
+        disabled={loading} placeholder="输入你的回答或问题...">
         <button className="btn-ghost" onClick={() => sendMessage("end-class")} disabled={loading}>下课</button>
         <a href={`/quiz?concept=${conceptSlug}`} className="btn-ghost" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>自测</a>
-      </div>
+      </ChatInput>
     </div>
   );
 }

@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 import { chat } from "@/lib/llm-router";
+import { pathOrThrow, PATHS } from "@/lib/env";
 
-const MARKDOWN_DIR = "d:\\claude code\\辅导\\markdown";
-const INDEX_PATH = "d:\\claude code\\web\\data\\knowledge-index.json";
+const MARKDOWN_DIR = pathOrThrow("markdownDir");
+const INDEX_PATH = PATHS.knowledgeIndex;
 
 async function extractPDFText(filePath: string): Promise<string> {
   const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");

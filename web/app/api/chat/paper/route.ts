@@ -4,8 +4,9 @@ import { readAllTeacherFiles } from "@/lib/file-reader";
 import knowledgeData from "@/data/knowledge-index.json";
 import fs from "fs/promises";
 import path from "path";
+import { pathOrThrow } from "@/lib/env";
 
-const PAPERS_DIR = "d:\\claude code\\辅导\\机器学习论文";
+const PAPERS_DIR = pathOrThrow("papersDir");
 
 async function findPaperPDF(slug: string): Promise<string | null> {
   const papers = (knowledgeData.papers || []) as Array<Record<string, unknown>>;

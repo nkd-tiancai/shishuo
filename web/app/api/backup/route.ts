@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
-
-const TUTORING_DIR = "d:\\claude code\\辅导\\teacher";
+import { pathOrThrow } from "@/lib/env";
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);
@@ -38,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     if (type === "classroom" && conceptTitle) {
       // Save to 课堂记录/YYYY-MM-DD-concept.md
-      const dir = path.join(TUTORING_DIR, "课堂记录");
+      const dir = path.join(pathOrThrow("teacherDir"), "课堂记录");
       await fs.mkdir(dir, { recursive: true });
       const filename = `${date}-${conceptTitle.replace(/[\/:*?"<>|]/g, "-")}.md`;
       const filepath = path.join(dir, filename);
@@ -52,7 +51,7 @@ export async function POST(request: NextRequest) {
     if (type === "groupchat") {
       const entry = `\n## ${date} ${time} — Web群聊\n\n${transcript}\n`;
       await fs.appendFile(
-        path.join(TUTORING_DIR, "wechat_group.md"),
+        path.join(pathOrThrow("teacherDir"), "wechat_group.md"),
         entry,
         "utf-8"
       );
@@ -61,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     if (type === "private" && targetCharacter) {
       const filename = `private_${targetCharacter}.md`;
-      const filepath = path.join(TUTORING_DIR, filename);
+      const filepath = path.join(pathOrThrow("teacherDir"), filename);
       const entry = `\n## ${date} ${time}\n\n${transcript}\n`;
       await fs.appendFile(filepath, entry, "utf-8");
       return NextResponse.json({ ok: true, file: `teacher/${filename}` });

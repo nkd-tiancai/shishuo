@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import type { KnowledgeGraph, GraphNode } from "@/lib/graph-types";
+import { PATHS } from "@/lib/env";
 
 function loadGraph(): KnowledgeGraph | null {
-  const graphPath = "d:/claude code/web/data/graph.json";
-  if (!fs.existsSync(graphPath)) return null;
+  const gPath = PATHS.graphJson;
+  if (!gPath || !fs.existsSync(gPath)) return null;
   try {
-    return JSON.parse(fs.readFileSync(graphPath, "utf-8")) as KnowledgeGraph;
+    return JSON.parse(fs.readFileSync(gPath, "utf-8")) as KnowledgeGraph;
   } catch {
     return null;
   }
