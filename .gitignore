@@ -1,6 +1,7 @@
 # Content data (excluded from open source)
 辅导/
-web/data/
+web/data/*
+!web/data/knowledge-index.json
 
 # Environment
 .env.local
