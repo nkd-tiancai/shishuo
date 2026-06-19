@@ -1,0 +1,358 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  role          String    @default("USER")
+  disabledAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  authenticators Authenticator[]
+
+  inviteCodes       InviteCode[]       @relation("InviteCodeUsedBy")
+  workspace         PersonalWorkspace?
+  apiCredentials    ApiCredential[]
+  sourceDocuments   SourceDocument[]
+  knowledgeBases    KnowledgeBase[]
+  courses           Course[]
+  lessons           Lesson[]
+  flashcards        Flashcard[]
+  learningProgress  LearningProgress[]
+  chatSessions      ChatSession[]
+  chatMessages      ChatMessage[]
+  generationJobs    GenerationJob[]
+  characterCards    CharacterCard[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+model Authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+}
+
+model InviteCode {
+  id           String    @id @default(cuid())
+  codeHash     String    @unique
+  label        String?
+  expiresAt    DateTime?
+  usedAt       DateTime?
+  usedByUserId String?
+  createdAt    DateTime  @default(now())
+
+  usedBy User? @relation("InviteCodeUsedBy", fields: [usedByUserId], references: [id])
+}
+
+model PersonalWorkspace {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  name      String   @default("我的自学空间")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ApiCredential {
+  id              String   @id @default(cuid())
+  userId          String
+  name            String
+  baseURL         String
+  encryptedApiKey String
+  model           String
+  role            String   @default("default")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, role])
+}
+
+model CharacterCard {
+  id               String   @id @default(cuid())
+  userId           String
+  name             String
+  role             String   @default("classmate")
+  description      String   @default("")
+  personality      String   @default("")
+  scenario         String   @default("")
+  firstMessage     String   @default("")
+  avatar           String   @default("")
+  avatarUrl        String?
+  relationshipLine String   @default("")
+  usageMode        String   @default("both")
+  isTeacher        Boolean  @default(false)
+  visibility       String   @default("private")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user              User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceRelations   CharacterRelationship[] @relation("SourceRelation")
+  targetRelations   CharacterRelationship[] @relation("TargetRelation")
+
+  @@index([userId, role])
+}
+
+model SourceDocument {
+  id                 String         @id @default(cuid())
+  userId             String
+  filename           String
+  originalName       String
+  mimeType           String
+  sizeBytes          Int
+  hash               String
+  sourcePath         String
+  normalizedPath     String?
+  status             String         @default("UPLOADED")
+  conversionWarnings String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, hash])
+}
+
+model KnowledgeBase {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courses Course[]
+
+  @@index([userId])
+}
+
+model Course {
+  id              String       @id @default(cuid())
+  userId          String
+  knowledgeBaseId String?
+  title           String
+  status          String       @default("DRAFT")
+  visibility      String       @default("private")
+  publishedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  knowledgeBase KnowledgeBase?  @relation(fields: [knowledgeBaseId], references: [id], onDelete: SetNull)
+  lessons       Lesson[]
+  chatSessions  ChatSession[]
+
+  @@index([userId, status])
+}
+
+model Lesson {
+  id         String   @id @default(cuid())
+  userId     String
+  courseId   String
+  title      String
+  orderIndex Int
+  content    String   @default("")
+  sourceRefs String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course     Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  flashcards Flashcard[]
+  progress   LearningProgress[]
+  sessions   ChatSession[]
+
+  @@index([userId, courseId])
+}
+
+model Flashcard {
+  id          String   @id @default(cuid())
+  userId      String
+  lessonId    String?
+  question    String
+  answer      String
+  sourceRefs  String?
+  confidence  Int?
+  nextReviewAt DateTime?
+  createdAt   DateTime @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson? @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+
+  @@index([userId, lessonId])
+}
+
+model LearningProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  lessonId    String
+  status      String    @default("not_started")
+  confidence  Int?
+  learnedAt   DateTime?
+  nextReviewAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+model ChatSession {
+  id              String   @id @default(cuid())
+  userId          String
+  courseId        String?
+  lessonId        String?
+  characterCardId String?
+  type            String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course   Course?       @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  lesson   Lesson?       @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  messages ChatMessage[]
+
+  @@index([userId, type])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  sessionId String
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sessionId])
+}
+
+model CharacterRelationship {
+  id           String   @id @default(cuid())
+  sourceCardId String
+  targetCardId String
+  relationType String   @default("")
+  description  String   @default("")
+  createdAt    DateTime @default(now())
+
+  source CharacterCard @relation("SourceRelation", fields: [sourceCardId], references: [id], onDelete: Cascade)
+  target CharacterCard @relation("TargetRelation", fields: [targetCardId], references: [id], onDelete: Cascade)
+
+  @@index([sourceCardId])
+  @@index([targetCardId])
+}
+
+model RateLimitBucket {
+  key        String   @id
+  tokens     Float
+  lastRefill DateTime
+
+  @@map("rate_limit_buckets")
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  userId       String
+  action       String
+  resourceType String
+  resourceId   String?
+  metadata     String?
+  ip           String?
+  createdAt    DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model SharedAccess {
+  id            String   @id @default(cuid())
+  resourceType  String
+  resourceId    String
+  ownerUserId   String
+  invitedEmail  String
+  invitedUserId String?
+  role          String   @default("viewer")
+  acceptedAt    DateTime?
+  createdAt     DateTime @default(now())
+}
+
+model GenerationJob {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  status    String    @default("PENDING")
+  input     String
+  output    String?
+  error     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+}

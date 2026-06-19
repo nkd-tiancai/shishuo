@@ -1,0 +1,7 @@
+node_modules/
+.next/
+dev.db
+dev.db.bak
+.env
+storage/
+user_data/
